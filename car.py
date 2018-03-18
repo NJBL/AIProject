@@ -9,20 +9,19 @@ if len(sys.argv) != 3:
   sys.exit()
 else:
   reward = 'fuel' if ((sys.argv[1] == '-f') or (sys.argv[1] == '-F')) else 'speed'
-  with open(sys.argv[2]) as csvfile:
-    try:
-        track = csv.reader(csvfile)
-    except:
+  print(reward)
+  try:
+    with open(sys.argv[2]) as csvfile:
+      track = csv.reader(csvfile)
+      for row in track:
+        print(row)
+    
+  except IOError:
       print("COULD NOT FIND FILE")
       print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
       sys.exit() 
 
-
-
-
-    print(reward)
-    for row in track:
-      print(row)
+  
   print(getRPM())
   print(getMPH())
 sys.exit("End")
