@@ -5,6 +5,7 @@ import math
 gears = [3.17, 1.88, 1.3, 0.97, 0.74] # 5 gears
 final_drive = 3.9 # Final Drive Ratio
 tire_diameter = 25.3 # stock 17" wheels, in inches
+idle_rpm = 750
 
 #Environment Constants
 step = 52.8 # feet, (1 mile / 100)
@@ -12,8 +13,20 @@ step = 52.8 # feet, (1 mile / 100)
 
 # Variables, current attributes of the car
 CUR_GEAR = 1 # Not starting at 0 because that would be confusing, starting at 1
-RPM = 0 # init to idle
+RPM = idle_rpm # init to idle
 MPH = 0 # init to stopped
+ACC = 1.0 # init to stopped
+ALT = 0 # assumes starting at 0 alt
+ANG = 0
+
+def perc_acc(steps):
+  return ACC - abs(ang_delta(steps))
+
+def ang_delta(steps):
+  return ANG - (reduce(lambda step, next: step[1] + next[1], steps)/len(steps))
+
+def alt_delta(steps):
+  return ALT - (reduce(lambda step, next: step[0] + next[0], steps)/len(steps))
 
 def getMPH(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, RPM = RPM):
   #global gears, final_drive, tire_diameter, CUR_GEAR, RPM
