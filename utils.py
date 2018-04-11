@@ -8,9 +8,11 @@ gears = [3.17, 1.88, 1.3, 0.97, 0.74] # 5 gears
 final_drive = 3.9 # Final Drive Ratio
 tire_diameter = 25.3 # stock 17" wheels, in inches
 idle_rpm = 750
+redline_rpm = 6300
 weight = 3333 # lbs
 rolling_resistance = 0.02 # average rr constant
 drag_coef = 0.35
+front_area = 22 * 0.092903# sqare feet converted to square meters
 tran_efficiency = 0.8
 car_data = np.array([
   (1013, 117.2),
@@ -39,12 +41,13 @@ fit_trqs = dfunc(fit_rpms)
 torque_curve = 0
 #Environment Constants
 step = 52.8 # feet, (1 mile / 100)
+air_dens = 1.225 # kg/m^3
 
 
 # Variables, current attributes of the car
 CUR_GEAR = 1 # Not starting at 0 because that would be confusing, starting at 1
 RPM = idle_rpm # init to idle
-MPH = 0 # init to stopped
+MPH = 0.0 # init to stopped
 ACC = 1.0 # init to stopped
 ALT = 0 # assumes starting at 0 alt
 ANG = 0
@@ -57,27 +60,20 @@ def rpm_to_trq(rpm):
 def rpm_to_hp(rpm):
   return rpm_to_trq(rpm) * rpm / 5252
 
-def acceleration(trq, MPH = MPH, drag_coef = drag_coef, rolling_resistance = rolling_resistance, weight = weight):
-  return (trq - (drag_coef * MPH) - (rolling_resistance * MPH)) / weight
+def wheel_torque(rpm = RPM):
+  return (rpm_to_trq(rpm) * gears[CUR_GEAR] * final_drive * tran_efficiency) / ((tire_diameter / 2) / 12)
 
-print rpm_to_trq(3000)
-print rpm_to_hp(3000)
-print acceleration(rpm_to_trq(3000),20)
+def drag(MPH = MPH, drag_coef = drag_coef, front_area = front_area):
+  mps = MPH * 0.44704
+  return (0.5 * air_dens * drag_coef * front_area * (mps * mps)) * 0.7376
+
+def acceleration(RPM = RPM, MPH = MPH,  rolling_resistance = rolling_resistance, weight = weight):
+  return (wheel_torque(RPM) - drag(MPH, drag_coef) - (rolling_resistance * MPH)) / weight
+
+
 
 
 # Car Physics
-
-# 
-# def acceleration(RPM = RPM, CUR_GEAR = CUR_GEAR, final_drive = final_drive, tran_efficiency = tran_efficiency, tire_diameter = tire_diameter):
-#   wheel_torque = rpm_to_trq(RPM) * gears[CUR_GEAR] * final_drive * tran_efficiency / (tire_diameter / 2)  
-#   return wheel_torque
-# print acceleration(3000)
-
-# def acceleration(steps):
-#   f_trac = 1.0 - abs(ang_delta(steps))
-#   f_drag = drag_coef * velocity()
-#   f_rr = rolling_resistance * velocity()
-#   return (f_trac - f_drag + f_rr) / weight
 
 
 
@@ -102,6 +98,7 @@ def slip():
 def getMPH(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, RPM = RPM):
   #global gears, final_drive, tire_diameter, CUR_GEAR, RPM
   return (RPM*tire_diameter)/(gears[CUR_GEAR]*final_drive*336)
+
 def getRPM(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, MPH = MPH):
   #global gears, final_drive, tire_diameter, CUR_GEAR, MPH
   return (MPH*gears[CUR_GEAR]*final_drive*336)/(tire_diameter)
