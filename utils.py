@@ -80,7 +80,7 @@ def getMPH(gears = gears, final_drive = final_drive, tire_diameter = tire_diamet
   #global gears, final_drive, tire_diameter, CUR_GEAR, RPM
   return (RPM*tire_diameter)/(gears[CUR_GEAR]*final_drive*336)
 
-def getRPM(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, MPH = MPH):
+def getRPM(CUR_GEAR = CUR_GEAR, gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, MPH = MPH):
   #global gears, final_drive, tire_diameter, CUR_GEAR, MPH
   return (MPH*gears[CUR_GEAR]*final_drive*336)/(tire_diameter)
 
@@ -110,17 +110,19 @@ def slip(steps):
 
 # Basic Shifting functions
 def shift_up():
-  global CUR_GEAR
+  global CUR_GEAR, RPM
   if len(gears) > CUR_GEAR:
     CUR_GEAR += 1
+    RPM -= getRPM() 
     return True
   else:
     return False
 
 def shift_down():
-  global CUR_GEAR
+  global CUR_GEAR, RPM
   if CUR_GEAR > 1:
     CUR_GEAR -= 1
+    RPM += getRPM()
     return True
   else:
     return False
