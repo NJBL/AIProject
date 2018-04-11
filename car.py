@@ -21,7 +21,6 @@ else:
       print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
       sys.exit() 
 
-  
-  print(getRPM())
-  print(getMPH())
+  #print(getRPM())
+  #print(getMPH())
 sys.exit("End")

@@ -13,6 +13,7 @@ weight = 3333 # lbs
 rolling_resistance = 0.02 # average rr constant
 drag_coef = 0.35
 front_area = 22 * 0.092903# sqare feet converted to square meters
+length = 174 # inches
 tran_efficiency = 0.8
 car_data = np.array([
   (1013, 117.2),
@@ -50,7 +51,38 @@ RPM = idle_rpm # init to idle
 MPH = 0.0 # init to stopped
 ACC = 1.0 # init to stopped
 ALT = 0 # assumes starting at 0 alt
-ANG = 0
+ANG = 0.0
+
+
+# Car Physics
+
+
+
+
+
+# "Driver" functions
+
+# percent acceleration, amount of acceleration accounting for turns
+def perc_acc(steps):
+  return 1.0 - abs(ang_delta(steps))
+
+def alt_delta(steps):
+  return ALT - (sum((step[0] for step in steps))/len(steps))
+
+# average turn angle of visible track ahead
+def ang_delta(steps):
+  return ANG - (sum((step[1] for step in steps))/len(steps))
+
+
+
+
+def getMPH(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, RPM = RPM):
+  #global gears, final_drive, tire_diameter, CUR_GEAR, RPM
+  return (RPM*tire_diameter)/(gears[CUR_GEAR]*final_drive*336)
+
+def getRPM(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, MPH = MPH):
+  #global gears, final_drive, tire_diameter, CUR_GEAR, MPH
+  return (MPH*gears[CUR_GEAR]*final_drive*336)/(tire_diameter)
 
 # Useful Utilities
 # 
@@ -70,40 +102,11 @@ def drag(MPH = MPH, drag_coef = drag_coef, front_area = front_area):
 def acceleration(RPM = RPM, MPH = MPH,  rolling_resistance = rolling_resistance, weight = weight):
   return (wheel_torque(RPM) - drag(MPH, drag_coef) - (rolling_resistance * MPH)) / weight
 
-
-
-
-# Car Physics
-
-
-
-
-
-# "Driver" functions
-
-# percent acceleration, amount of acceleration accounting for turns
-def perc_acc(steps):
-  return 1.0 - abs(ang_delta(steps))
-
-# average turn angle of visible track ahead
-def ang_delta(steps):
-  return ANG - (reduce(lambda step, next: step[1] + next[1], steps)/len(steps))
-
-def alt_delta(steps):
-  return ALT - (reduce(lambda step, next: step[0] + next[0], steps)/len(steps))
-
-def slip():
-  return 0
-
-def getMPH(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, RPM = RPM):
-  #global gears, final_drive, tire_diameter, CUR_GEAR, RPM
-  return (RPM*tire_diameter)/(gears[CUR_GEAR]*final_drive*336)
-
-def getRPM(gears = gears, final_drive = final_drive, tire_diameter = tire_diameter, CUR_GEAR = CUR_GEAR, MPH = MPH):
-  #global gears, final_drive, tire_diameter, CUR_GEAR, MPH
-  return (MPH*gears[CUR_GEAR]*final_drive*336)/(tire_diameter)
-
-
+def slip(steps):
+  angle = 90.0 * abs(ang_delta(steps))
+  radius = length / (math.sin(math.radians(angle)))
+  lat_force = (weight * (MPH * MPH)) / radius
+  return lat_force >= weight
 
 # Basic Shifting functions
 def shift_up():
