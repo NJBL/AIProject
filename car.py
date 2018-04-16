@@ -9,18 +9,47 @@ if len(sys.argv) != 3:
   sys.exit()
 else:
   reward = 'fuel' if ((sys.argv[1] == '-f') or (sys.argv[1] == '-F')) else 'speed'
-  print(reward)
+  track = [
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0],
+    [0.0,0.0]
+  ]
+  # try:
+  #   with open(sys.argv[2]) as csvfile:
+  #     t = csv.reader(csvfile)
+  #     for row in t:
+  #       track.append(row)
+  # except IOError:
+  #     print("COULD NOT FIND FILE")
+  #     print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
+  #     sys.exit() 
+  sight = 10
   try:
-    with open(sys.argv[2]) as csvfile:
-      track = csv.reader(csvfile)
-      for row in track:
-        print(row)
-    
-  except IOError:
-      print("COULD NOT FIND FILE")
-      print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
-      sys.exit() 
-
-  #print(getRPM())
-  #print(getMPH())
+    for i in range(len(track)):
+      visible = track[i:i+sight-1]
+       
+  except IOError, e:
+    print e
 sys.exit("End")
