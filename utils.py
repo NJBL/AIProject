@@ -23,11 +23,11 @@ def perc_acc(steps):
   return 1.0 - (angle)
 
 def alt_delta(steps):
-  return ALT - (sum((float(step[0]) for step in steps))/len(steps))
+  return (sum((float(step[0]) for step in steps))/len(steps))
 
 # average turn angle of visible track ahead
 def ang_delta(steps):
-  return ANG - (sum((float(step[1]) for step in steps))/len(steps))
+  return (sum((float(step[1]) for step in steps))/len(steps))
 
 
 
@@ -91,7 +91,10 @@ class WRX(object):
 
   def getRPM(self, MPS, CUR_GEAR):
     #global final_drive, tire_diameter, CUR_GEAR, MPS
-    return (MPS/self.tire_radius) * self.gears[CUR_GEAR - 1] * self.final_drive * 60/(2 * math.pi)
+    return (MPS/self.tire_radius) * self.gears[CUR_GEAR - 1] * self.final_drive * self.tran_efficiency * 60/(2 * math.pi)
+  def getMPS(self, RPM, CUR_GEAR):
+    return (RPM*self.tire_radius)/(self.gears[CUR_GEAR-1]*self.final_drive*self.tran_efficiency * 60/(2 * math.pi))
+  
   # Useful Utilities
   # 
   def rpm_to_trq(self, rpm):
@@ -167,73 +170,116 @@ ALT = 0 # assumes starting at 0 alt
 ANG = 0.0 # always starting strait
 
 car = WRX(ALT, ANG)
-
-def simulate(track, sight):
+def simulate(track, sight, lap):
   #print "Peak Torque", car.peak_trq()
   total_time = 0.0 #s
+  stalls = 0
   slips = 0
   for i in range(len(track)):
     try:
-      #print car.CUR_GEAR, car.MPS, car.RPM
-      visible = track[i:i+sight-1]
+      action = lap[i]
+      section = [track[i]]
       # current values 
       c_rpm = car.RPM
       c_s = car.MPS
-      
-      print c_s, car.CUR_GEAR#, car.slip_speed(visible) 
-      if car.slip(visible, c_s):
-        slips += 1
-      if c_s >= car.slip_speed(visible):
-        #need to brake
-        b_acc = car.braking_dec
-        b_time = car.time_between(b_acc / 2, c_s, -(step))
-        
-        b_s = car.next_speed(b_time, b_acc, c_s)
-        b_rpm = car.getRPM(b_s, car.CUR_GEAR)
-        b_g = car.CUR_GEAR
-        if car.wheel_torque(b_rpm, b_g) < car.peak_trq(b_g):
-          print "Shift Down"
-          b_g = max(1, b_g - 1) # at least 1st gear
-        car.setVals(b_s, b_rpm, b_g)
-        total_time += float(b_time)
-        print "Braking", b_s, car.slip_speed(visible)#, car.slip(visible, c_s)
-        continue
+      c_g = car.CUR_GEAR
+      print c_s, c_rpm, c_g
 
-      
-      acc = car.acceleration(car.RPM, c_s, car.CUR_GEAR)# * perc_acc(visible)
+      if car.slip(section, c_s):
+        slips += 1
+      if c_rpm < car.idle_rpm:
+        stalls += 1
+
+      acc = car.acceleration(car.RPM, c_s, c_g)
       time = car.time_between(acc / 2, c_s, -(step))
       total_time += float(time)
 
-      if car.rpm_to_hp(c_rpm) > car.peak_hp():
-        #shift up
-        if len(car.gears) > car.CUR_GEAR:
-          print "Shift UP"#, car.rpm_to_hp(c_rpm)
-          car.setVals(c_s, car.getRPM(c_s, car.CUR_GEAR + 1), car.CUR_GEAR + 1)
-          continue
-        else:
-          # already highest gear
-          continue
-      
-
-      
-      # new calculated values
+      # new values
+      if action == "up":
+        n_g = min(len(car.gears), c_g + 1)
+      elif action == "down":
+        n_g = max(1, c_g - 1)
+      else:
+        n_g = c_g
       n_s = car.next_speed(time, acc, c_s)
-      n_rpm = car.getRPM(n_s, car.CUR_GEAR)
-      #print car.wheel_torque(n_rpm, car.CUR_GEAR) < car.peak_trq(car.CUR_GEAR), c_s >= n_s
-      if (car.wheel_torque(n_rpm, car.CUR_GEAR) < car.peak_trq(car.CUR_GEAR)) and (c_s >= n_s):
-        #shift down
-        if car.CUR_GEAR > 1:
-          print "Shift DOWN"#, car.wheel_torque(n_rpm)
-          car.setVals(c_s, car.getRPM(c_s, car.CUR_GEAR - 1), car.CUR_GEAR - 1)
-          continue
-
-      
-
-      car.setVals(n_s, n_rpm, car.CUR_GEAR)
+      n_rpm = car.getRPM(n_s, n_g)
+      if n_rpm > car.redline_rpm:
+        car.setVals(car.getMPS(car.redline_rpm, n_g), car.redline_rpm, n_g)
+        continue
+      car.setVals(n_s, n_rpm, n_g)
     except IOError:
       pass # I know...I know
 
-  return total_time, slips
+  return total_time, slips, stalls
+
+
+
+# def simulate(track, sight):
+#   #print "Peak Torque", car.peak_trq()
+#   total_time = 0.0 #s
+#   slips = 0
+#   for i in range(len(track)):
+#     try:
+#       #print car.CUR_GEAR, car.MPS, car.RPM
+#       visible = track[i:i+sight-1]
+#       # current values 
+#       c_rpm = car.RPM
+#       c_s = car.MPS
+      
+#       print c_s, car.CUR_GEAR#, car.slip_speed(visible) 
+#       if car.slip(visible, c_s):
+#         slips += 1
+#       if c_s >= car.slip_speed(visible):
+#         #need to brake
+#         b_acc = car.braking_dec
+#         b_time = car.time_between(b_acc / 2, c_s, -(step))
+        
+#         b_s = car.next_speed(b_time, b_acc, c_s)
+#         b_rpm = car.getRPM(b_s, car.CUR_GEAR)
+#         b_g = car.CUR_GEAR
+#         if car.wheel_torque(b_rpm, b_g) < car.peak_trq(b_g):
+#           print "Shift Down"
+#           b_g = max(1, b_g - 1) # at least 1st gear
+#         car.setVals(b_s, b_rpm, b_g)
+#         total_time += float(b_time)
+#         print "Braking", b_s, car.slip_speed(visible)#, car.slip(visible, c_s)
+#         continue
+
+      
+#       acc = car.acceleration(car.RPM, c_s, car.CUR_GEAR)# * perc_acc(visible)
+#       time = car.time_between(acc / 2, c_s, -(step))
+#       total_time += float(time)
+
+#       if car.rpm_to_hp(c_rpm) > car.peak_hp():
+#         #shift up
+#         if len(car.gears) > car.CUR_GEAR:
+#           print "Shift UP"#, car.rpm_to_hp(c_rpm)
+#           car.setVals(c_s, car.getRPM(c_s, car.CUR_GEAR + 1), car.CUR_GEAR + 1)
+#           continue
+#         else:
+#           # already highest gear
+#           continue
+      
+
+      
+#       # new calculated values
+#       n_s = car.next_speed(time, acc, c_s)
+#       n_rpm = car.getRPM(n_s, car.CUR_GEAR)
+#       #print car.wheel_torque(n_rpm, car.CUR_GEAR) < car.peak_trq(car.CUR_GEAR), c_s >= n_s
+#       if (car.wheel_torque(n_rpm, car.CUR_GEAR) < car.peak_trq(car.CUR_GEAR)) and (c_s >= n_s):
+#         #shift down
+#         if car.CUR_GEAR > 1:
+#           print "Shift DOWN"#, car.wheel_torque(n_rpm)
+#           car.setVals(c_s, car.getRPM(c_s, car.CUR_GEAR - 1), car.CUR_GEAR - 1)
+#           continue
+
+      
+
+#       car.setVals(n_s, n_rpm, car.CUR_GEAR)
+#     except IOError:
+#       pass # I know...I know
+
+#   return total_time, slips
   
 
 
