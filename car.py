@@ -1,7 +1,14 @@
 import sys
 import csv
+import json
+import requests
 from utils import *
 from reward import *
+
+
+# API_key = "AIzaSyByKr1JYD0yYLdK7BG0aKYci2uoegcaPGk" #yes, I know...I know
+# response = requests.get("https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&key=" + API_key)
+# print json.loads(response.text)['results']
 
 # System Arguments
 # reward, path to track file
