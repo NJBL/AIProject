@@ -45,7 +45,7 @@ class WRX(object):
   front_area = 2.043866 # 22 * 0.092903 sqare feet converted to square meters
   length = 4.4196 # meters = 174 inches
   tran_efficiency = 0.8 # estimated, but realistic
-  braking_dec = -8.0 # meters per sec^2
+  braking_dec = 0.83 * step #meters per second
 
 
   CUR_GEAR = 1 # Not starting at 0 because that would be confusing, starting at 1
@@ -110,23 +110,25 @@ class WRX(object):
     return (0.5 * self.drag_coef * self.front_area * air_dens * (mps * mps)) + (self.rolling_resistance * mps)
 
   def acceleration(self, RPM, MPS, CUR_GEAR):
+    if RPM < self.idle_rpm:
+      return 0.001
     force = self.wheel_torque(RPM, CUR_GEAR) - self.drag(MPS)
     return force / self.weight
   # print wheel_torque(idle_rpm, 2) 
   # print acceleration(idle_rpm, 0, 2)
-  def slip_speed(self, steps):
-    angle = 90.0 * abs(ang_delta(steps))
+  def slip_speed(self, ang):
+    angle = 90.0 * abs(float(ang))
     if angle == 0:
       return 9999
-    radius = self.length / (math.sin(math.radians(angle)))
+    radius = 2*self.length / (math.sin(math.radians(angle)))
     return math.sqrt(radius)
 
 
-  def slip(self, steps, MPS):
-    angle = 90.0 * abs(ang_delta(steps))
+  def slip(self, ang, MPS):
+    angle = 90.0 * abs(float(ang))
     if angle == 0.0: # eliminate divide by 0
       return False
-    radius = self.length / (math.sin(math.radians(angle)))
+    radius = 2*self.length / (math.sin(math.radians(angle)))
     lat_force = (self.weight * (MPS * MPS)) / radius
     return lat_force >= self.weight
 
@@ -138,13 +140,10 @@ class WRX(object):
   #   overall_braking = (self.braking_dec * step) + self.drag(MPS)
   #   return -(overall_braking / self.weight)
 
-  def time_between(self, a, b, c):
-    if (b * b) - 4 * a * c < 0:
-      discRoot = 1
-    else:
-      discRoot = math.sqrt((b * b) - 4 * a * c) # first pass
-    root1 = (-b + discRoot) / (2 * a) # solving positive
-    #root2 = (-b - discRoot) / (2 * a) # solving negative
+  def time_between(self, a, s, d):
+    discRoot = math.sqrt((s * s) - 4 * a * d) # first pass
+    root1 = (-s + discRoot) / (2 * a) # solving positive
+    #root2 = (-s - discRoot) / (2 * a) # solving negative
     pos = "%.2f" % root1
     #neg = "%.2f" % root2
     return pos
@@ -183,24 +182,39 @@ def simulate(track, sight, lap):
       c_rpm = car.RPM
       c_s = car.MPS
       c_g = car.CUR_GEAR
-      print c_s, c_rpm, c_g
-
-      if car.slip(section, c_s):
+      acc = car.acceleration(c_rpm, c_s, c_g)
+      time = car.time_between(acc / 2, c_s, -(step))
+      if car.slip(section[0][1], c_s):
+        print "slip", car.slip_speed(section[0][1])
         slips += 1
       if c_rpm < car.idle_rpm:
         stalls += 1
 
-      acc = car.acceleration(car.RPM, c_s, c_g)
-      time = car.time_between(acc / 2, c_s, -(step))
-      total_time += float(time)
-
+      
+      
       # new values
       if action == "up":
         n_g = min(len(car.gears), c_g + 1)
       elif action == "down":
         n_g = max(1, c_g - 1)
+      elif action == "brake":
+        n_s = max(0, c_s - car.braking_dec)
+        n_rpm = car.getRPM(n_s, c_g)
+        n_g = c_g
+        acc = car.acceleration(n_rpm, n_s, n_g)
+        time = car.time_between(acc / 2, n_s, -(step))
+        car.setVals(n_s, n_rpm, n_g)
+        total_time += float(time)
+        print action, c_s, c_g, time
+        continue
       else:
         n_g = c_g
+
+      
+      
+      
+      total_time += float(time)
+      print action, c_s, c_g, time
       n_s = car.next_speed(time, acc, c_s)
       n_rpm = car.getRPM(n_s, n_g)
       if n_rpm > car.redline_rpm:

@@ -29,9 +29,9 @@ else:
       print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
       sys.exit() 
   sight = 10
-  lap = [0] * len(track)
-  print "Time, Slips, Stalls"
+  lap = ["up"] * len(track)
   print simulate(track, sight, lap)
+  print "Time, Slips, Stalls"
   #print car.MPS, car.RPM
   # speed = 0
   # rpm = idle_rpm
