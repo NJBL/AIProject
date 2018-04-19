@@ -5,22 +5,14 @@ import matplotlib.pyplot as plt #temp
 
 
 
-
-# GLOBAL CONSTANTS
-# Using Subaru WRX as example car
-
-
-
 #Environment Constants
 step = 10 # meters
 air_dens = 1.225 # kg/m^3
 
 
-
-#percent acceleration, amount of acceleration accounting for turns
-def perc_acc(steps):
-  angle = abs(ang_delta(steps))
-  return 1.0 - (angle)
+# def perc_acc(steps):
+#   angle = abs(ang_delta(steps))
+#   return 1.0 - (angle)
 
 def alt_delta(steps):
   return (sum((float(step[0]) for step in steps))/len(steps))
@@ -90,13 +82,11 @@ class WRX(object):
     self.CUR_GEAR = CUR_GEAR
 
   def getRPM(self, MPS, CUR_GEAR):
-    #global final_drive, tire_diameter, CUR_GEAR, MPS
     return (MPS/self.tire_radius) * self.gears[CUR_GEAR - 1] * self.final_drive * self.tran_efficiency * 60/(2 * math.pi)
+
   def getMPS(self, RPM, CUR_GEAR):
     return (RPM*self.tire_radius)/(self.gears[CUR_GEAR-1]*self.final_drive*self.tran_efficiency * 60/(2 * math.pi))
-  
-  # Useful Utilities
-  # 
+
   def rpm_to_trq(self, rpm):
     return self.fit_trqs[(np.abs(self.fit_rpms-rpm)).argmin()]
 
@@ -136,9 +126,6 @@ class WRX(object):
   # print slip([(0, 0.99)], 2)
   # print slip([(0, 0.99)], 20)
 
-  # def braking(self, MPS):
-  #   overall_braking = (self.braking_dec * step) + self.drag(MPS)
-  #   return -(overall_braking / self.weight)
 
   def time_between(self, a, s, d):
     discRoot = math.sqrt((s * s) - 4 * a * d) # first pass
@@ -226,6 +213,8 @@ def simulate(track, sight, lap):
 
   return total_time, slips, stalls
 
+
+# TEMP GRAVEYARD
 
 
 # def simulate(track, sight):

@@ -32,54 +32,5 @@ else:
   lap = ["up"] * len(track)
   print simulate(track, sight, lap)
   print "Time, Slips, Stalls"
-  #print car.MPS, car.RPM
-  # speed = 0
-  # rpm = idle_rpm
-  # print speed, rpm
-  # try:
-  #   for i in range(len(track)):
-  #     visible = track[i:i+sight-1]
-  #     speed = next_speed(visible, rpm, speed)
-  #     rpm = getRPM(speed)
-  #     print speed, rpm
-      
-  # except IOError, e:
-  #   print e
+
 sys.exit("End")
-
-
-
-
-
-
-
-
-
-
-# track = [
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0],
-  #   [0.0,0.0]
-  # ]
