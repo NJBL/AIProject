@@ -172,7 +172,7 @@ def simulate(track, sight, lap):
       acc = car.acceleration(c_rpm, c_s, c_g)
       time = car.time_between(acc / 2, c_s, -(step))
       if car.slip(section[0][1], c_s):
-        print "slip", car.slip_speed(section[0][1])
+        #print "slip", car.slip_speed(section[0][1])
         slips += 1
       if c_rpm < car.idle_rpm:
         stalls += 1
@@ -192,7 +192,7 @@ def simulate(track, sight, lap):
         time = car.time_between(acc / 2, n_s, -(step))
         car.setVals(n_s, n_rpm, n_g)
         total_time += float(time)
-        print action, c_s, c_g, time
+        #print action, c_s, c_g, time
         continue
       else:
         n_g = c_g
@@ -201,7 +201,7 @@ def simulate(track, sight, lap):
       
       
       total_time += float(time)
-      print action, c_s, c_g, time
+      #print action, c_s, c_g, time
       n_s = car.next_speed(time, acc, c_s)
       n_rpm = car.getRPM(n_s, n_g)
       if n_rpm > car.redline_rpm:
