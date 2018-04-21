@@ -38,6 +38,7 @@ class WRX(object):
   length = 4.4196 # meters = 174 inches
   tran_efficiency = 0.8 # estimated, but realistic
   braking_dec = 0.83 * step #meters per second
+  pk_rpm = 3510
 
 
   CUR_GEAR = 1 # Not starting at 0 because that would be confusing, starting at 1
@@ -92,6 +93,23 @@ class WRX(object):
 
   def rpm_to_hp(self, rpm):
     return self.rpm_to_trq(rpm) * rpm / 5252
+
+  def est_shift_up(self, s, g):
+    if len(self.gears) <= g:
+      return g, s, 0, 0
+    g = g + 1
+    rpm = self.getRPM(s, g)
+    hp = self.rpm_to_hp(rpm)
+    return g, s, rpm, hp
+
+  def est_shift_down(self, s, g):
+    if g <= 1:
+      return g, s, 0, 0
+    g = max(1, g - 1)
+    rpm = self.getRPM(s, g)
+    hp = self.rpm_to_hp(rpm)
+    return g, s, rpm, hp
+
 
   def wheel_torque(self, rpm, CUR_GEAR):
     return (self.rpm_to_trq(rpm) * self.gears[CUR_GEAR - 1] * self.final_drive * self.tran_efficiency) / self.tire_radius
@@ -152,66 +170,74 @@ class WRX(object):
 
 
 # Variables, current attributes of the car
-ALT = 0 # assumes starting at 0 alt
-ANG = 0.0 # always starting strait
+# ALT = 0 # assumes starting at 0 alt
+# ANG = 0.0 # always starting strait
 
-car = WRX(ALT, ANG)
-def simulate(track, sight, lap):
-  #print "Peak Torque", car.peak_trq()
-  total_time = 0.0 #s
-  stalls = 0
-  slips = 0
-  for i in range(len(track)):
-    try:
-      action = lap[i]
-      section = [track[i]]
-      # current values 
-      c_rpm = car.RPM
-      c_s = car.MPS
-      c_g = car.CUR_GEAR
-      acc = car.acceleration(c_rpm, c_s, c_g)
-      time = car.time_between(acc / 2, c_s, -(step))
-      if car.slip(section[0][1], c_s):
-        #print "slip", car.slip_speed(section[0][1])
-        slips += 1
-      if c_rpm < car.idle_rpm:
-        stalls += 1
+# car = WRX(ALT, ANG)
+# def simulate(track, lap):
+#   #print "Peak Torque", car.peak_trq()
+#   total_time = 0.0 #s
+#   # stalls = 0
+#   # slips = 0
+#   record = []
+#   for i in range(len(track)):
+#     try:
+#       action = lap[i]
+#       section = [track[i]]
+#       # current values 
+#       c_rpm = car.RPM
+#       c_s = car.MPS
+#       c_g = car.CUR_GEAR
+#       acc = car.acceleration(c_rpm, c_s, c_g)
+#       time = car.time_between(acc / 2, c_s, -(step))
+#       record.append([c_rpm, c_s, c_g, acc, time])
+#       if car.slip(section[0][1], c_s):
+#         #slips += 1
+#         print "SLIP", c_s, car.slip_speed(section[0][1])
+#         total_time = -1
+#         break
+#       if c_rpm < car.idle_rpm:
+#         #stalls += 1
+#         print "STALL", c_rpm
+#         total_time = -2
+#         break
 
-      
-      
-      # new values
-      if action == "up":
-        n_g = min(len(car.gears), c_g + 1)
-      elif action == "down":
-        n_g = max(1, c_g - 1)
-      elif action == "brake":
-        n_s = max(0, c_s - car.braking_dec)
-        n_rpm = car.getRPM(n_s, c_g)
-        n_g = c_g
-        acc = car.acceleration(n_rpm, n_s, n_g)
-        time = car.time_between(acc / 2, n_s, -(step))
-        car.setVals(n_s, n_rpm, n_g)
-        total_time += float(time)
-        #print action, c_s, c_g, time
-        continue
-      else:
-        n_g = c_g
 
       
       
-      
-      total_time += float(time)
-      #print action, c_s, c_g, time
-      n_s = car.next_speed(time, acc, c_s)
-      n_rpm = car.getRPM(n_s, n_g)
-      if n_rpm > car.redline_rpm:
-        car.setVals(car.getMPS(car.redline_rpm, n_g), car.redline_rpm, n_g)
-        continue
-      car.setVals(n_s, n_rpm, n_g)
-    except IOError:
-      pass # I know...I know
+#       # new values
+#       if action == "up":
+#         n_g = min(len(car.gears), c_g + 1)
+#       elif action == "down":
+#         n_g = max(1, c_g - 1)
+#       elif action == "brake":
+#         n_s = max(0, c_s - car.braking_dec)
+#         n_rpm = car.getRPM(n_s, c_g)
+#         n_g = c_g
+#         acc = car.acceleration(n_rpm, n_s, n_g)
+#         time = car.time_between(acc / 2, n_s, -(step))
+#         car.setVals(n_s, n_rpm, n_g)
+#         total_time += float(time)
+#         #print action, c_s, c_g, time
+#         continue
+#       else:
+#         n_g = c_g
 
-  return total_time, slips, stalls
+      
+      
+      
+#       total_time += float(time)
+#       #print action, c_s, c_g, time
+#       n_s = car.next_speed(time, acc, c_s)
+#       n_rpm = car.getRPM(n_s, n_g)
+#       if n_rpm > car.redline_rpm:
+#         car.setVals(car.getMPS(car.redline_rpm, n_g), car.redline_rpm, n_g)
+#         continue
+#       car.setVals(n_s, n_rpm, n_g)
+#     except IOError:
+#       pass # I know...I know
+
+#   return total_time, record#, slips, stalls
 
 
 # TEMP GRAVEYARD
