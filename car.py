@@ -30,7 +30,9 @@ else:
       print("COULD NOT FIND FILE")
       #print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
       sys.exit() 
-  #sight = 10
+
+  
+  sight = 10
   
 
   # init
@@ -38,9 +40,12 @@ else:
   consensus = []
   lap = ["acc"] * len(track)
   time, record = simulate(track, lap)
+  best = 0
+  all_lap_times = []
 
   while len(consensus) < min_consensus:
-    new_lap = generate_lap(lap, record, car)
+    all_lap_times.append(time)
+    new_lap, kill = generate_lap(track, lap, record, car, sight)
     time, record = simulate(track, new_lap)
     
     # The loop is meant to end when the simulation has plateaued, and no improvement is expected
@@ -51,22 +56,30 @@ else:
     elif not consensus:
       #empty
       consensus.append(time)
+      best = new_lap
     elif time < consensus[0]:
       # new best time
       consensus = [time]
+      best = new_lap
     elif time == consensus[0]:
       # duplicate time, good
       consensus.append(time) 
-    elif time > consensus[0]:
-      break
+    # elif time > consensus[0]:
+    #   #new_lap = lap
+    #   break
     
     lap = new_lap
-    #print lap
-    print time
+    # try:
+    #   print time
+    # except IOError:
+    #   pass # TODO I know I know
+    if kill:
+      print "kill"
+      print lap
+      break
 
 
-
-  print consensus[0], lap
+  print consensus, best, all_lap_times
   #print "Time, Slips, Stalls"
 
 sys.exit("End")

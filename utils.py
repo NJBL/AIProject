@@ -1,7 +1,7 @@
 import math
 import cmath
 import numpy as np
-import matplotlib.pyplot as plt #temp
+#import matplotlib.pyplot as plt #temp
 
 
 
@@ -94,22 +94,30 @@ class WRX(object):
   def rpm_to_hp(self, rpm):
     return self.rpm_to_trq(rpm) * rpm / 5252
 
-  def est_shift_up(self, s, g):
-    if len(self.gears) <= g:
-      return g, s, 0, 0
-    g = g + 1
-    rpm = self.getRPM(s, g)
-    hp = self.rpm_to_hp(rpm)
-    return g, s, rpm, hp
+  # def est_shift_up(self, s, g):
+  #   if len(self.gears) <= g:
+  #     return g, s, 0, 0
+  #   g = g + 1
+  #   rpm = self.getRPM(s, g)
+  #   hp = self.rpm_to_hp(rpm)
+  #   return g, s, rpm, hp
 
-  def est_shift_down(self, s, g):
-    if g <= 1:
-      return g, s, 0, 0
-    g = max(1, g - 1)
-    rpm = self.getRPM(s, g)
-    hp = self.rpm_to_hp(rpm)
-    return g, s, rpm, hp
+  # def est_shift_down(self, s, g):
+  #   if g <= 1:
+  #     return g, s, 0, 0
+  #   g = max(1, g - 1)
+  #   rpm = self.getRPM(s, g)
+  #   hp = self.rpm_to_hp(rpm)
+  #   return g, s, rpm, hp
 
+  # def est_braking(self, s, g, visible):
+  #   slip_s = self.slip_speed(visible)
+  #   if not slip_s:
+  #     slip_s = s - 0.1
+  #   s = max(slip_s, max(0, s - self.braking_dec))
+  #   rpm = self.getRPM(s, g)
+  #   hp = self.rpm_to_hp(rpm)
+  #   return g, s, rpm, hp
 
   def wheel_torque(self, rpm, CUR_GEAR):
     return (self.rpm_to_trq(rpm) * self.gears[CUR_GEAR - 1] * self.final_drive * self.tran_efficiency) / self.tire_radius
@@ -124,11 +132,12 @@ class WRX(object):
     return force / self.weight
   # print wheel_torque(idle_rpm, 2) 
   # print acceleration(idle_rpm, 0, 2)
-  def slip_speed(self, ang):
-    angle = 90.0 * abs(float(ang))
+  def slip_speed(self, steps):
+    angle = 90.0 * abs(ang_delta(steps))
     if angle == 0:
-      return 9999
+      return False
     radius = 2*self.length / (math.sin(math.radians(angle)))
+    #print ang_delta(steps), radius
     return math.sqrt(radius)
 
 
@@ -140,9 +149,6 @@ class WRX(object):
     lat_force = (self.weight * (MPS * MPS)) / radius
     return lat_force >= self.weight
 
-  # print slip([(0, 0.99)], 1)
-  # print slip([(0, 0.99)], 2)
-  # print slip([(0, 0.99)], 20)
 
 
   def time_between(self, a, s, d):
