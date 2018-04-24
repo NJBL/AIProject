@@ -9,11 +9,11 @@ BOGUS = 9999
 def reward(spd, rpm, pk_rpm, gr, hp, slip_s, err):
   reward = 0
   if err:
-    return -9999
+    return -99999999999999
   reward += spd
   reward += hp
   reward += (rpm - pk_rpm)/1000
-  if not slip_s == BOGUS:
+  if not slip_s == BOGUS: # no angle strait track
     reward -= 10 * (spd - slip_s)
   return gr * reward 
 
@@ -24,7 +24,8 @@ def generate_lap(track, prev, record, car, sight):
   kill = False
   for i,step in enumerate(record):
     visible = track[i:i+sight-1]
-    
+    if prev[i] == "brake":
+      continue
     c_rpm, c_sp, c_gr, slip, stall = step
     err = slip or stall
     # if err:
@@ -35,8 +36,8 @@ def generate_lap(track, prev, record, car, sight):
     slip_s = car.slip_speed(visible)
     if not slip_s:
       slip_s = BOGUS # no angle, just making it irrelevant
-    elif slip_s < c_sp:
-      print "SLIP: ", slip_s, c_sp
+    # elif slip_s < c_sp:
+    #   print "SLIP: ", slip_s, c_sp
     #print c_sp, c_rpm, c_gr
     c_stall = c_rpm <= car.idle_rpm
     c_slip = c_sp > slip_s
@@ -62,7 +63,7 @@ def generate_lap(track, prev, record, car, sight):
     d_stall = d_rpm <= car.idle_rpm
     d_slip = d_s > slip_s
     d_rwd = reward(d_s, d_rpm, car.pk_rpm, d_g, d_hp, slip_s, (d_stall or d_slip))
-    print c_rwd, u_rwd, d_rwd, b_rwd
+    #print c_rwd, u_rwd, d_rwd, b_rwd
 
     
 
@@ -75,14 +76,14 @@ def generate_lap(track, prev, record, car, sight):
           print "down"
         else:
           continue
-      elif u_rwd > d_rwd and u_rwd > b_rwd:
+      elif u_rwd >= d_rwd and u_rwd >= b_rwd:
         if not prev[i] == "up":
           prev[i] = "up"
           update = True
           print "up"
         else:
           continue
-      elif b_rwd > u_rwd and b_rwd > d_rwd:
+      elif b_rwd >= u_rwd and b_rwd >= d_rwd:
         if not prev[i] == "brake":
           prev[i] = "brake"
           update = True
@@ -91,10 +92,19 @@ def generate_lap(track, prev, record, car, sight):
           continue
       break
   if not update:
-    kill = True # temp
-    # need to implement:
-    #  if finished this pass and still slipping, enforce earlier braking
-    
+    for i,step in enumerate(record):
+      c_rpm, c_sp, c_gr, slip, stall = step
+      if slip:
+        try:
+          for j in range(i, 0, -1):
+            if not (prev[j] == "brake" or prev[j] == "down"):
+              prev[j] = "brake"
+              update = True
+              break
+        except IndexError:
+          kill = True
+  if not update:
+    kill = True
   
   return prev, kill
   

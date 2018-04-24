@@ -42,18 +42,17 @@ else:
   time, record = simulate(track, lap)
   best = 0
   all_lap_times = []
-
   while len(consensus) < min_consensus:
-    all_lap_times.append(time)
     new_lap, kill = generate_lap(track, lap, record, car, sight)
     time, record = simulate(track, new_lap)
-    
+    all_lap_times.append(time)
     # The loop is meant to end when the simulation has plateaued, and no improvement is expected
     # The list 'consensus' keeps track of the best time, and keeps duplicate results until the minimum consensus is met
     if time < 0:
       # DNF
       time = -1
-    elif not consensus:
+      continue
+    elif len(consensus) == 0:
       #empty
       consensus.append(time)
       best = new_lap
@@ -62,24 +61,16 @@ else:
       consensus = [time]
       best = new_lap
     elif time == consensus[0]:
-      # duplicate time, good
+      # duplicate time, consistent
       consensus.append(time) 
-    # elif time > consensus[0]:
-    #   #new_lap = lap
-    #   break
     
     lap = new_lap
-    # try:
-    #   print time
-    # except IOError:
-    #   pass # TODO I know I know
     if kill:
-      print "kill"
-      print lap
+      print "killed, on the last run the time was:"
+      print time
       break
 
 
-  print consensus, best, all_lap_times
-  #print "Time, Slips, Stalls"
+  print "Best time:\n", consensus, "\nBest lap:\n", best, "\nAll lap times:\n", all_lap_times
 
 sys.exit("End")

@@ -8,11 +8,8 @@ import numpy as np
 #Environment Constants
 step = 10 # meters
 air_dens = 1.225 # kg/m^3
+gravity = 9.8 # m/s^2
 
-
-# def perc_acc(steps):
-#   angle = abs(ang_delta(steps))
-#   return 1.0 - (angle)
 
 def alt_delta(steps):
   return (sum((float(step[0]) for step in steps))/len(steps))
@@ -79,6 +76,7 @@ class WRX(object):
     self.ANG = ANG
   def setVals(self, MPS, RPM, CUR_GEAR):
     self.RPM = RPM
+
     self.MPS = MPS
     self.CUR_GEAR = CUR_GEAR
 
@@ -94,50 +92,26 @@ class WRX(object):
   def rpm_to_hp(self, rpm):
     return self.rpm_to_trq(rpm) * rpm / 5252
 
-  # def est_shift_up(self, s, g):
-  #   if len(self.gears) <= g:
-  #     return g, s, 0, 0
-  #   g = g + 1
-  #   rpm = self.getRPM(s, g)
-  #   hp = self.rpm_to_hp(rpm)
-  #   return g, s, rpm, hp
-
-  # def est_shift_down(self, s, g):
-  #   if g <= 1:
-  #     return g, s, 0, 0
-  #   g = max(1, g - 1)
-  #   rpm = self.getRPM(s, g)
-  #   hp = self.rpm_to_hp(rpm)
-  #   return g, s, rpm, hp
-
-  # def est_braking(self, s, g, visible):
-  #   slip_s = self.slip_speed(visible)
-  #   if not slip_s:
-  #     slip_s = s - 0.1
-  #   s = max(slip_s, max(0, s - self.braking_dec))
-  #   rpm = self.getRPM(s, g)
-  #   hp = self.rpm_to_hp(rpm)
-  #   return g, s, rpm, hp
+  def grade(self, alt):
+    return float(gravity) * float(alt)
 
   def wheel_torque(self, rpm, CUR_GEAR):
     return (self.rpm_to_trq(rpm) * self.gears[CUR_GEAR - 1] * self.final_drive * self.tran_efficiency) / self.tire_radius
 
-  def drag(self, mps = MPS):
+  def drag(self, mps):
     return (0.5 * self.drag_coef * self.front_area * air_dens * (mps * mps)) + (self.rolling_resistance * mps)
 
-  def acceleration(self, RPM, MPS, CUR_GEAR):
+  def acceleration(self, RPM, MPS, CUR_GEAR, alt):
     if RPM < self.idle_rpm:
       return 0.001
-    force = self.wheel_torque(RPM, CUR_GEAR) - self.drag(MPS)
-    return force / self.weight
-  # print wheel_torque(idle_rpm, 2) 
-  # print acceleration(idle_rpm, 0, 2)
+    force = self.wheel_torque(RPM, CUR_GEAR) - self.drag(MPS) 
+    return force / self.weight + self.grade(alt)
+
   def slip_speed(self, steps):
     angle = 90.0 * abs(ang_delta(steps))
-    if angle == 0:
+    if angle == 0.0:
       return False
     radius = 2*self.length / (math.sin(math.radians(angle)))
-    #print ang_delta(steps), radius
     return math.sqrt(radius)
 
 
@@ -150,7 +124,6 @@ class WRX(object):
     return lat_force >= self.weight
 
 
-
   def time_between(self, a, s, d):
     discRoot = math.sqrt((s * s) - 4 * a * d) # first pass
     root1 = (-s + discRoot) / (2 * a) # solving positive
@@ -161,8 +134,7 @@ class WRX(object):
 
   def next_speed(self, time, acc, s):
     return s + acc * float(time)
-  # print(getRPM(30, 3))
-  # print next_speed([(0, 0)], getRPM(30, 3), 30, 3)
+
   def peak_trq(self, CUR_GEAR):
     return max((self.wheel_torque(d[0], CUR_GEAR) for d in self.car_data))
   
@@ -172,7 +144,7 @@ class WRX(object):
 
 
 
-
+# TEMP GRAVEYARD
 
 
 # Variables, current attributes of the car
@@ -246,7 +218,32 @@ class WRX(object):
 #   return total_time, record#, slips, stalls
 
 
-# TEMP GRAVEYARD
+
+
+# def est_shift_up(self, s, g):
+  #   if len(self.gears) <= g:
+  #     return g, s, 0, 0
+  #   g = g + 1
+  #   rpm = self.getRPM(s, g)
+  #   hp = self.rpm_to_hp(rpm)
+  #   return g, s, rpm, hp
+
+  # def est_shift_down(self, s, g):
+  #   if g <= 1:
+  #     return g, s, 0, 0
+  #   g = max(1, g - 1)
+  #   rpm = self.getRPM(s, g)
+  #   hp = self.rpm_to_hp(rpm)
+  #   return g, s, rpm, hp
+
+  # def est_braking(self, s, g, visible):
+  #   slip_s = self.slip_speed(visible)
+  #   if not slip_s:
+  #     slip_s = s - 0.1
+  #   s = max(slip_s, max(0, s - self.braking_dec))
+  #   rpm = self.getRPM(s, g)
+  #   hp = self.rpm_to_hp(rpm)
+  #   return g, s, rpm, hp
 
 
 # def simulate(track, sight):
