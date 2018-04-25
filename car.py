@@ -69,6 +69,11 @@ else:
       break
 
 
-  print "Best time:\n", consensus, "\nBest lap:\n", best, "\nAll lap times:\n", all_lap_times
+  print("Best time:\n")
+  print(consensus)
+  print("\nBest lap:\n")
+  print(best)
+  print("\nAll lap times:\n")
+  print(all_lap_times)
 
 sys.exit("End")
