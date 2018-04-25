@@ -1,25 +1,17 @@
 import sys
 import csv
 import json
-import requests
 from utils import *
 from reward import *
 from MDP import *
 from simulation import *
-
-
-# API_key = "AIzaSyByKr1JYD0yYLdK7BG0aKYci2uoegcaPGk" #yes, I know...I know
-# response = requests.get("https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&key=" + API_key)
-# print json.loads(response.text)['results']
 
 # System Arguments
 # reward, path to track file
 if len(sys.argv) != 2:
   print("usage:\n        path to track file (required)")
   sys.exit()
-# CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND
 else:
-  #reward = 'fuel' if ((sys.argv[1] == '-f') or (sys.argv[1] == '-F')) else 'speed'
   track = []
   try:
     with open(sys.argv[1]) as csvfile:
@@ -28,7 +20,6 @@ else:
         track.append(row)
   except IOError:
       print("COULD NOT FIND FILE")
-      #print("usage:\n  CHOOSE (required):\n    either -f average fuel economy\n    or     -s average speed\n  AND      path to track file (required)")
       sys.exit() 
 
   
@@ -68,12 +59,12 @@ else:
     if kill:
       break
 
-
-  print("Best time:\n")
-  print(consensus)
-  print("\nBest lap:\n")
-  print(best)
-  print("\nAll lap times:\n")
+  print("\nAll lap times:")
   print(all_lap_times)
+  print("\nBest time: ")
+  print(consensus)
+  print("\nBest lap: ")
+  print(filter(lambda x: not x=="acc", best))
+  
 
 sys.exit("End")

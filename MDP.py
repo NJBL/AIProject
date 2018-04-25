@@ -28,8 +28,6 @@ def generate_lap(track, prev, record, car, sight):
       continue
     c_rpm, c_sp, c_gr, slip, stall = step
     err = slip or stall
-    # if err:
-    #   print slip, stall
     c_hp = car.rpm_to_hp(c_rpm)
     c_trq = car.wheel_torque(c_rpm, c_gr)
     pk_trq = car.peak_trq(c_gr)
@@ -68,21 +66,18 @@ def generate_lap(track, prev, record, car, sight):
         if not prev[i] == "down":
           prev[i] = "down"
           update = True
-          print "down"
         else:
           continue
       elif u_rwd >= d_rwd and u_rwd >= b_rwd:
         if not prev[i] == "up":
           prev[i] = "up"
           update = True
-          print "up"
         else:
           continue
       elif b_rwd >= u_rwd and b_rwd >= d_rwd:
         if not prev[i] == "brake":
           prev[i] = "brake"
           update = True
-          print "brake"
         else:
           continue
       break
@@ -103,35 +98,3 @@ def generate_lap(track, prev, record, car, sight):
     kill = True
   
   return prev, kill
-  
-  
-  # ASSISTED
-  # n_lap = prev
-  # for i, step in enumerate(prev):
-  #   if i < (len(record) - 1):
-  #     car = record[i]
-  #     c_rpm = car.RPM
-  #     c_s = car.MPS
-  #     c_g = car.CUR_GEAR
-      
-  #     try :
-  #       if car.rpm_to_hp(c_rpm) > car.peak_hp():
-  #         # shift up
-  #         print "SHIFT UP"
-  #         n_lap[i] = "up"
-        
-  #       elif (car.wheel_torque(c_rpm, c_g) < car.peak_trq(c_g)) and (c_s >= record[i + 1].MPS):
-  #         # shfit down
-  #         print "SHIFT DOWN"
-  #         n_lap[i] = "down" 
-  #     except IndexError:
-  #       break
-  #   #else:
-  #     # DNF
-  #     # if record[-1][0] == "SLIP":
-  #     #   # too fast
-  #     #   # Need to brake earlier
-  #     #   0
-  #     # elif record[-1][0] == "STALL":
-  #     #   # too slow for this gear, need to downshift
-  #     #   0
