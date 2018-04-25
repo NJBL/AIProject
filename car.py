@@ -66,8 +66,6 @@ else:
     
     lap = new_lap
     if kill:
-      print "killed, on the last run the time was:"
-      print time
       break
 
 

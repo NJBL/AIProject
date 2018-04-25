@@ -36,20 +36,15 @@ def generate_lap(track, prev, record, car, sight):
     slip_s = car.slip_speed(visible)
     if not slip_s:
       slip_s = BOGUS # no angle, just making it irrelevant
-    # elif slip_s < c_sp:
-    #   print "SLIP: ", slip_s, c_sp
-    #print c_sp, c_rpm, c_gr
     c_stall = c_rpm <= car.idle_rpm
     c_slip = c_sp > slip_s
     c_rwd = reward(c_sp, c_rpm, car.pk_rpm, c_gr, c_hp, slip_s, (c_stall or c_slip))
     # Compare actions
+
     # Brake
-    
     b_g, b_s, b_rpm, b_hp = est_braking(c_sp, c_gr, visible)
-    #print b_s, slip_s
     b_stall = b_rpm <= car.idle_rpm
     b_slip = b_s > slip_s
-    # print b_stall, b_slip 
     b_rwd = reward(b_s, b_rpm, car.pk_rpm, b_g, b_hp, slip_s, (b_stall or b_slip))
     
     # Shift up
@@ -92,6 +87,7 @@ def generate_lap(track, prev, record, car, sight):
           continue
       break
   if not update:
+    # Enforce extra braking if there are lingering slips
     for i,step in enumerate(record):
       c_rpm, c_sp, c_gr, slip, stall = step
       if slip:
